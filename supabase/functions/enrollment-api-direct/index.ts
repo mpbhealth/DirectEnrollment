@@ -207,7 +207,7 @@ function buildClearPayloadForLog(data: Record<string, unknown>): Record<string, 
   }
 }
 
-async function insertCareplusLogSafe(
+async function insertDirectLogSafe(
   supabase: ReturnType<typeof createClient>,
   params: {
     agentNumber: number;
@@ -247,16 +247,16 @@ async function insertCareplusLogSafe(
       externalResponse: params.externalResponse ?? null,
     };
 
-    const { error } = await supabase.from("careplus_log").insert({
+    const { error } = await supabase.from("direct_log").insert({
       log: JSON.stringify(logObj),
       request_payload: requestPayload,
       payload_size_bytes: payloadSizeBytes,
     });
     if (error) {
-      console.error("[careplus_log] insert failed:", error.message);
+      console.error("[direct_log] insert failed:", error.message);
     }
   } catch (e) {
-    console.error("[careplus_log] insert exception:", e);
+    console.error("[direct_log] insert exception:", e);
   }
 }
 
@@ -806,7 +806,7 @@ Deno.serve(async (req: Request) => {
     );
 
     } finally {
-      await insertCareplusLogSafe(supabase, {
+      await insertDirectLogSafe(supabase, {
         agentNumber,
         rawData,
         externalResponse: externalResponseData,
