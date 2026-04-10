@@ -1,14 +1,14 @@
 import { Dependent } from '../hooks/useEnrollmentStorage';
 
-export interface CarePlusPricingOption {
+export interface DirectEnrollmentPricingOption {
   productId: string;
   price: number;
   iuaLevel: string;
   displayText: string;
 }
 
-export interface CarePlusPricingResult {
-  options: CarePlusPricingOption[];
+export interface DirectEnrollmentPricingResult {
+  options: DirectEnrollmentPricingOption[];
   isAvailable: boolean;
   errorMessage?: string;
   coverageType: string;
@@ -30,7 +30,7 @@ export interface BenefitPlan {
   price: number;
 }
 
-export interface CarePlusPricing {
+export interface DirectEnrollmentPlanPrice {
   productId: string;
   price: number;
   iuaLevel: '1000' | '1250' | '2500' | '5000';
@@ -38,7 +38,7 @@ export interface CarePlusPricing {
   coverageType: 'Member Only' | 'Member + Spouse' | 'Member + Children' | 'Member + Family';
 }
 
-export const CARE_PLUS_PRICING: CarePlusPricing[] = [
+export const DIRECT_ENROLLMENT_PLAN_PRICES: DirectEnrollmentPlanPrice[] = [
   { productId: '10334', price: 268.00, iuaLevel: '1250', ageRange: '18-29', coverageType: 'Member Only' },
   { productId: '10334', price: 298.00, iuaLevel: '1250', ageRange: '30-49', coverageType: 'Member Only' },
   { productId: '10334', price: 381.00, iuaLevel: '1250', ageRange: '50-64', coverageType: 'Member Only' },
@@ -260,7 +260,7 @@ export function getCoverageType(dependents: Dependent[]): 'Member Only' | 'Membe
   return 'Member + Family';
 }
 
-export function getCarePlusPricingOptions(memberDOB: string, dependents: Dependent[]): CarePlusPricingResult {
+export function getDirectEnrollmentPricingOptions(memberDOB: string, dependents: Dependent[]): DirectEnrollmentPricingResult {
   const age = calculateAgeFromDOB(memberDOB);
 
   if (age === null) {
@@ -285,7 +285,7 @@ export function getCarePlusPricingOptions(memberDOB: string, dependents: Depende
 
   const coverageType = getCoverageType(dependents);
 
-  const matchingPrices = CARE_PLUS_PRICING.filter(
+  const matchingPrices = DIRECT_ENROLLMENT_PLAN_PRICES.filter(
     p => p.ageRange === ageRange && p.coverageType === coverageType
   );
 
@@ -298,7 +298,7 @@ export function getCarePlusPricingOptions(memberDOB: string, dependents: Depende
     };
   }
 
-  const options: CarePlusPricingOption[] = matchingPrices.map(p => ({
+  const options: DirectEnrollmentPricingOption[] = matchingPrices.map(p => ({
     productId: p.productId,
     price: p.price,
     iuaLevel: `$${p.iuaLevel}`,

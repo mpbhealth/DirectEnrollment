@@ -61,8 +61,8 @@ export default function Step2AddressInfo({
     const totalEnrollmentFee = formData.products.reduce((sum, p) => sum + (p.enrollmentFee || 0), 0);
     const totalAnnualFee = formData.products.reduce((sum, p) => sum + (p.annualFee || 0), 0);
 
-    const carePlusProduct = formData.products.find(p => p.id === 'care-plus');
-    const baseRecurringMonthly = carePlusProduct?.extractedPrice || 0;
+    const directEnrollmentProduct = formData.products.find(p => p.id === 'care-plus');
+    const baseRecurringMonthly = directEnrollmentProduct?.extractedPrice || 0;
 
     const subscriberIsSmoker = formData.smoker === 'Yes';
     const dependentIsSmoker = formData.dependents.some(d => d.smoker === 'Yes');

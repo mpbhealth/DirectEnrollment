@@ -338,9 +338,9 @@ function buildZohoContactData(
     Lead_Source: "Enrollment Platform",
     Account_Name: "Enrollment Website",
     Contact_Status: "New Enrollment",
-    Carrier: "CarePlus",
+    Carrier: "Direct Enrollment",
     Company_Association: "MPB Health",
-    Product_Type: `Care Plus 2024 (${payload.benefitId})`,
+    Product_Type: `Direct Enrollment 2024 (${payload.benefitId})`,
     Coverage_Option: COVERAGE_MAP[payload.benefitId] || "Unknown",
   };
 

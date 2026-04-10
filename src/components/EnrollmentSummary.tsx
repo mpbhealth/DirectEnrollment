@@ -1,7 +1,7 @@
 import { ShoppingCart, X, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Product, Dependent, AppliedPromo } from '../hooks/useEnrollmentStorage';
-import { calculateEssentialPricing, getCarePlusPricingOptions } from '../utils/pricingLogic';
+import { calculateEssentialPricing, getDirectEnrollmentPricingOptions } from '../utils/pricingLogic';
 import { extractProductIdFromDropdown, extractPriceFromDropdown } from '../utils/formatters';
 import { validatePromoCode, applyPromoDiscount } from '../utils/promoCodeService';
 
@@ -47,7 +47,7 @@ export default function EnrollmentSummary({
   const [promoError, setPromoError] = useState<string>('');
 
   const essentialPricing = calculateEssentialPricing(dependents);
-  const carePlusPricing = getCarePlusPricingOptions(memberDOB, dependents);
+  const directEnrollmentPricing = getDirectEnrollmentPricingOptions(memberDOB, dependents);
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) {
@@ -87,8 +87,8 @@ export default function EnrollmentSummary({
 
   const calculateRecurringFee = (product: Product): number => {
     if (product.id === 'care-plus') {
-      if (product.selectedPlan && carePlusPricing.isAvailable) {
-        const selectedOption = carePlusPricing.options.find(
+      if (product.selectedPlan && directEnrollmentPricing.isAvailable) {
+        const selectedOption = directEnrollmentPricing.options.find(
           opt => opt.displayText === product.selectedPlan
         );
         return selectedOption ? selectedOption.price : 0;
@@ -163,7 +163,7 @@ export default function EnrollmentSummary({
                     <div>
                       {product.id === 'care-plus' ? (
                         <div className="space-y-2">
-                          {carePlusPricing.isAvailable ? (
+                          {directEnrollmentPricing.isAvailable ? (
                             <>
                               <select
                                 value={product.selectedPlan}
@@ -181,7 +181,7 @@ export default function EnrollmentSummary({
                                 }`}
                               >
                                 <option value="">Select IUA Level...</option>
-                                {carePlusPricing.options.map((option, idx) => (
+                                {directEnrollmentPricing.options.map((option, idx) => (
                                   <option key={idx} value={option.displayText}>
                                     {option.displayText}
                                   </option>
@@ -203,7 +203,7 @@ export default function EnrollmentSummary({
                                 }`}
                               >
                                 <option value="">Select IUA...</option>
-                                {carePlusPricing.options.map((option, idx) => (
+                                {directEnrollmentPricing.options.map((option, idx) => (
                                   <option key={idx} value={option.displayText}>
                                     {getMobileDisplayText(option.displayText)}
                                   </option>
@@ -215,7 +215,7 @@ export default function EnrollmentSummary({
                             </>
                           ) : (
                             <div className="w-full px-3 py-2 border border-red-300 rounded-lg bg-red-50 text-sm text-red-700">
-                              {carePlusPricing.errorMessage || 'Please enter your date of birth to see pricing options'}
+                              {directEnrollmentPricing.errorMessage || 'Please enter your date of birth to see pricing options'}
                             </div>
                           )}
                         </div>

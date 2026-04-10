@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useEnrollmentStorage, Dependent, PaymentInfo, QuestionnaireAnswers } from '../hooks/useEnrollmentStorage';
-import { getCarePlusPricingOptions, calculateAgeFromDOB } from '../utils/pricingLogic';
+import { getDirectEnrollmentPricingOptions, calculateAgeFromDOB } from '../utils/pricingLogic';
 import { generateEnrollmentPDF } from '../utils/generateEnrollmentPDF';
 import { encryptSensitiveFields } from '../utils/payloadEncryption';
 import ProgressIndicator from './ProgressIndicator';
@@ -393,24 +393,24 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       return;
     }
 
-    const carePlusProduct = formData.products.find(p => p.id === 'care-plus');
-    if (carePlusProduct) {
-      const carePlusPricing = getCarePlusPricingOptions(formData.dob, formData.dependents);
-      if (!carePlusPricing.isAvailable) {
+    const directEnrollmentProduct = formData.products.find(p => p.id === 'care-plus');
+    if (directEnrollmentProduct) {
+      const directEnrollmentPricing = getDirectEnrollmentPricingOptions(formData.dob, formData.dependents);
+      if (!directEnrollmentPricing.isAvailable) {
         setErrors({
-          essentialPlan: carePlusPricing.errorMessage || 'Invalid Care+ plan configuration',
+          essentialPlan: directEnrollmentPricing.errorMessage || 'Invalid Direct Enrollment plan configuration',
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
-      if (!carePlusProduct.selectedPlan) {
+      if (!directEnrollmentProduct.selectedPlan) {
         setErrors({
-          essentialPlan: 'Please select an IUA level for your Care+ membership',
+          essentialPlan: 'Please select an IUA level for your Direct Enrollment membership',
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
-      if (!carePlusProduct.extractedBenefitId) {
+      if (!directEnrollmentProduct.extractedBenefitId) {
         setErrors({
           essentialPlan: 'Invalid IUA selection. Please select a valid IUA level.',
         });
@@ -503,7 +503,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       email: '',
     };
 
-    // Reset Care+ selection when dependents change
+    // Reset Direct Enrollment plan selection when dependents change
     const updatedProducts = formData.products.map(product =>
       product.id === 'care-plus'
         ? { ...product, selectedPlan: '', extractedBenefitId: undefined, extractedPrice: undefined }
@@ -534,7 +534,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       email: '',
     };
 
-    // Reset Care+ selection when dependents change
+    // Reset Direct Enrollment plan selection when dependents change
     const updatedProducts = formData.products.map(product =>
       product.id === 'care-plus'
         ? { ...product, selectedPlan: '', extractedBenefitId: undefined, extractedPrice: undefined }
@@ -583,7 +583,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
   const handleRemoveDependent = (index: number) => {
     const updatedDependents = formData.dependents.filter((_, i) => i !== index);
 
-    // Reset Care+ selection when dependents change
+    // Reset Direct Enrollment plan selection when dependents change
     const updatedProducts = formData.products.map(product =>
       product.id === 'care-plus'
         ? { ...product, selectedPlan: '', extractedBenefitId: undefined, extractedPrice: undefined }
@@ -725,9 +725,9 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       const agentParam = formData.agent || agentId || '768413';
       const apiUrl = `${supabaseUrl}/functions/v1/enrollment-api-direct?id=${agentParam}`;
 
-      const carePlusProduct = formData.products.find(p => p.id === 'care-plus');
-      const benefitIdToSend = carePlusProduct?.extractedBenefitId || formData.benefitId;
-      const priceToSend = carePlusProduct?.extractedPrice || 0;
+      const directEnrollmentProduct = formData.products.find(p => p.id === 'care-plus');
+      const benefitIdToSend = directEnrollmentProduct?.extractedBenefitId || formData.benefitId;
+      const priceToSend = directEnrollmentProduct?.extractedPrice || 0;
 
       const requestBody = {
         firstName: formData.firstName,
@@ -929,7 +929,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
           customerFirstName: formData.firstName,
           customerLastName: formData.lastName,
           customerEmail: formData.email,
-          planName: 'Care+',
+          planName: 'Direct Enrollment',
         }),
       });
 
@@ -1039,7 +1039,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       <div className="bg-white rounded-lg shadow-lg px-3 py-6 xs:p-8">
         <div className="mb-8 text-center">
           <img src="/assets/MPB-Health-No-background.png" alt="MPB Health Logo" className="h-16 xs:h-20 w-auto mx-auto mb-4" />
-          <h1 className="text-xl xs:text-2xl md:text-3xl font-bold text-gray-900">Care+ Enrollment</h1>
+          <h1 className="text-xl xs:text-2xl md:text-3xl font-bold text-gray-900">Direct Enrollment</h1>
         </div>
 
         <ProgressIndicator currentStep={currentStep} totalSteps={3} />

@@ -1,5 +1,5 @@
 /*
-  # careplus_log — enrollment-api-direct request/response audit
+  # careplus_log — Direct Enrollment (enrollment-api-direct) request/response audit
 
   - created_at: when the request was processed
   - log: JSON text (outcome, HTTP status, external API snippet, errors — no masking)
@@ -32,4 +32,4 @@ CREATE POLICY "service_role select careplus_log"
 CREATE INDEX IF NOT EXISTS idx_careplus_log_created_at
   ON careplus_log (created_at DESC);
 
-COMMENT ON TABLE careplus_log IS 'Care+ enrollment API audit: full request payload (clear) and response metadata';
+COMMENT ON TABLE careplus_log IS 'Direct Enrollment API audit: full request payload (clear) and response metadata';
