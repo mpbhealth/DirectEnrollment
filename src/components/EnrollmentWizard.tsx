@@ -654,7 +654,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const zohoUrl = `${supabaseUrl}/functions/v1/zoho-sync-contact_careplus`;
+      const zohoUrl = `${supabaseUrl}/functions/v1/zoho-sync-contact_direct`;
       const zohoPayload: Record<string, unknown> = {
         firstName: requestBody.firstName,
         lastName: requestBody.lastName,
