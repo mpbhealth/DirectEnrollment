@@ -327,7 +327,7 @@ export default function Step2Questionnaire({
 
           <div>
             <p className="font-semibold text-gray-900 mb-2">
-              3. I will practice good health measures and strive for a balanced lifestyle. I agree to abstain from the use of any illicit or illegal drugs and refrain from excessive alcohol consumption, acts which are harmful to the body. I understand that members who use tobacco will have an increased monthly contribution (per household membership) of $50.
+              3. I will practice good health measures and strive for a balanced lifestyle. I agree to abstain from the use of any illicit or illegal drugs and refrain from excessive alcohol consumption, acts which are harmful to the body. Note: Failure to report tobacco use results in a one-time $500 fee, and cost sharing will be paused until this is paid.
               <span className="text-red-500 ml-1">*</span>
             </p>
 
@@ -440,14 +440,11 @@ export default function Step2Questionnaire({
               Understanding of Pre-Existing Conditions.
               <span className="text-red-500 ml-1">*</span>
             </p>
-            <p className="text-sm text-gray-700 mb-2">
-              I understand that Medical Needs that result from a condition that existed prior to membership are only shareable if the condition is:
-            </p>
             <p className="text-sm text-gray-700 mb-3">
-              Fully cured and 24 months have passed without symptoms, treatment, or medication, even if the cause of the symptoms is unknown or misdiagnosed.
+              I understand that medical needs that result from a condition that existed prior to membership are only shareable if the condition was regarded as cured and did not require treatment or present symptoms for 24 months prior to the membership start date. This applies even if the member was only examined, diagnosed, or took medication for the condition within that 24-month window.
             </p>
             <p className="text-sm mb-3" style={{ color: '#9b0000' }}>
-              Examples of Pre-existing conditions include but are not limited to: epilepsy, cancer, lupus, COPD, Heart Disease etc. For detailed information, Refer to Membership Sharing Guidelines: https://zionhealth.org/membership-guidelines-partner-pages/
+              Examples of pre-existing conditions include but are not limited to: arthritis, cancer, degenerative conditions, diabetes, and heart conditions. High blood pressure, high cholesterol, and diabetes (types 1 and 2) are exceptions if they have not required hospitalization in the last 12 months and are controlled via diet or medication. For detailed information, refer to the Member Guidelines.
             </p>
 
             <div className="flex flex-col gap-2">
@@ -491,11 +488,11 @@ export default function Step2Questionnaire({
               <li>Household Membership IUA: $5,000 (Standard Maternity IUA: $5,000)</li>
             </ul>
             <p className="text-sm text-gray-700 mb-3">
-              Expenses eligible for sharing may include prenatal care, postnatal care, and delivery. Any newborn expenses incurred after delivery are subject to a separate sharing request and IUA.
+              Expenses eligible for sharing may include prenatal care, postnatal care, and delivery. Any newborn expenses incurred after delivery are subject to a separate sharing request and IUA. The maternity sharing request and all itemized bills must be submitted within six (6) months of the date of service.
             </p>
             <p className="text-sm font-semibold mb-1" style={{ color: '#9b0000' }}>MATERNITY - WAITING PERIOD</p>
             <p className="text-sm mb-3" style={{ color: '#9b0000' }}>
-              Maternity sharing requests are ineligible for sharing during the first six (6) months of membership. To be eligible for sharing, the conception date must occur after six (6) months of continuous membership, as confirmed by medical records. Members who intentionally misrepresent their conception dates may be subject to membership revocation. Household memberships enrolled through a company or employer are also NOT subject to the six (6)-month waiting period.
+              Maternity sharing requests are ineligible for sharing during the first six (6) months of membership. To be eligible, the conception date must occur after six (6) months of continuous membership, as confirmed by medical records. Household memberships with a start date before April 1, 2025, are NOT subject to this waiting period. Household memberships enrolled through a company or employer are also NOT subject to the six (6)-month waiting period.
             </p>
 
             <div className="flex flex-col gap-2">
