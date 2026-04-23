@@ -74,3 +74,11 @@ const PRIVACY_POLICY_PDF = '/assets/Your%20Document%20Name.pdf';
 ```
 
 This document describes the same approach used in **Care+ Enrollment** (Step 2 questionnaire: Zion HealthShare privacy policy PDF modal).
+
+## Direct Enrollment (this repo)
+
+Implementation lives in `src/components/Step2Questionnaire.tsx`: the PDF is at **`public/assets/Zion HealthShare Privacy Policy.pdf`**, loaded with an encoded path:
+
+`const PRIVACY_POLICY_PDF = \`/assets/${encodeURIComponent('Zion HealthShare Privacy Policy.pdf')}\`;`
+
+`iframe` and “Open in new tab” use that same URL. Follow this doc when changing the modal so behavior stays aligned (backdrop `role="presentation"`, body scroll lock, Escape, `aria-label="Close privacy policy"` on the close control, `z-[100]`, `max-h-[90vh]`, bounded iframe height).

@@ -1,7 +1,9 @@
 import { FileText, ArrowLeft, PenTool, X, ExternalLink } from 'lucide-react';
-import privacyPolicyPdf from '../assets/Zion HealthShare Privacy Policy.pdf';
 import { FormData } from '../hooks/useEnrollmentStorage';
 import { useRef, useState, useEffect } from 'react';
+
+/** Privacy PDF modal: see docs/privacy-policy-modal-pattern.md */
+const PRIVACY_POLICY_PDF = `/assets/${encodeURIComponent('Zion HealthShare Privacy Policy.pdf')}`;
 
 interface QuestionnaireAnswers {
   zionPrinciplesAccept: string;
@@ -728,11 +730,10 @@ export default function Step2Questionnaire({
           aria-modal="true"
           aria-labelledby="privacy-policy-title"
         >
-          <button
-            type="button"
+          <div
+            role="presentation"
             className="absolute inset-0 bg-black/50"
             onClick={() => setPrivacyPolicyOpen(false)}
-            aria-label="Close privacy policy dialog"
           />
           <div
             className="relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl max-h-[90vh] min-h-0"
@@ -744,7 +745,7 @@ export default function Step2Questionnaire({
               </h2>
               <div className="flex items-center gap-1">
                 <a
-                  href={privacyPolicyPdf}
+                  href={PRIVACY_POLICY_PDF}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-blue-800 hover:bg-blue-50"
@@ -756,7 +757,7 @@ export default function Step2Questionnaire({
                   type="button"
                   onClick={() => setPrivacyPolicyOpen(false)}
                   className="rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  aria-label="Close"
+                  aria-label="Close privacy policy"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -764,9 +765,9 @@ export default function Step2Questionnaire({
             </div>
             <iframe
               title="Zion HealthShare Privacy Policy PDF"
-              src={privacyPolicyPdf}
+              src={PRIVACY_POLICY_PDF}
               className="min-h-0 w-full flex-1 border-0"
-              style={{ height: 'min(70vh, calc(90vh - 4rem))' }}
+              style={{ height: 'min(70vh, 800px)' }}
             />
           </div>
         </div>
