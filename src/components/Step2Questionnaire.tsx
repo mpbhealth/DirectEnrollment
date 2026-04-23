@@ -1,4 +1,5 @@
-import { FileText, ArrowLeft, PenTool } from 'lucide-react';
+import { FileText, ArrowLeft, PenTool, X, ExternalLink } from 'lucide-react';
+import privacyPolicyPdf from '../assets/Zion HealthShare Privacy Policy.pdf';
 import { FormData } from '../hooks/useEnrollmentStorage';
 import { useRef, useState, useEffect } from 'react';
 
@@ -40,6 +41,7 @@ export default function Step2Questionnaire({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawnSignature, setHasDrawnSignature] = useState(false);
+  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
   const pointsRef = useRef<{ x: number; y: number }[]>([]);
   const allStrokesRef = useRef<{ x: number; y: number }[][]>([]);
 
@@ -59,6 +61,20 @@ export default function Step2Questionnaire({
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!privacyPolicyOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPrivacyPolicyOpen(false);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [privacyPolicyOpen]);
 
   const handleRadioChange = (field: keyof QuestionnaireAnswers, value: string) => {
     onQuestionnaireChange(field, value);
@@ -695,16 +711,66 @@ export default function Step2Questionnaire({
       </fieldset>
 
       <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-6 text-center">
-        <a
-          href="https://zionhealthshare.org/privacy-policy/"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => setPrivacyPolicyOpen(true)}
           className="inline-flex items-center gap-2 px-6 py-3 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
         >
           <FileText className="w-5 h-5" />
           Privacy Policy | Zion HealthShare
-        </a>
+        </button>
       </div>
+
+      {privacyPolicyOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="privacy-policy-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setPrivacyPolicyOpen(false)}
+            aria-label="Close privacy policy dialog"
+          />
+          <div
+            className="relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl max-h-[90vh] min-h-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white px-4 py-3">
+              <h2 id="privacy-policy-title" className="text-lg font-semibold text-gray-900">
+                Privacy Policy | Zion HealthShare
+              </h2>
+              <div className="flex items-center gap-1">
+                <a
+                  href={privacyPolicyPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-blue-800 hover:bg-blue-50"
+                >
+                  <ExternalLink className="h-4 w-4 shrink-0" />
+                  Open in new tab
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPrivacyPolicyOpen(false)}
+                  className="rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title="Zion HealthShare Privacy Policy PDF"
+              src={privacyPolicyPdf}
+              className="min-h-0 w-full flex-1 border-0"
+              style={{ height: 'min(70vh, calc(90vh - 4rem))' }}
+            />
+          </div>
+        </div>
+      )}
 
       <fieldset className="border border-gray-300 rounded-lg p-6 space-y-6">
         <legend className="text-xl font-semibold text-gray-800 px-2">
