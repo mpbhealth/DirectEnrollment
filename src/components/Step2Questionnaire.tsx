@@ -1,9 +1,6 @@
-import { FileText, ArrowLeft, PenTool, X, ExternalLink } from 'lucide-react';
+import { FileText, ArrowLeft, PenTool } from 'lucide-react';
 import { FormData } from '../hooks/useEnrollmentStorage';
 import { useRef, useState, useEffect } from 'react';
-
-/** Privacy PDF modal: see docs/privacy-policy-modal-pattern.md */
-const PRIVACY_POLICY_PDF = `/assets/${encodeURIComponent('Zion HealthShare Privacy Policy.pdf')}`;
 
 interface QuestionnaireAnswers {
   zionPrinciplesAccept: string;
@@ -43,7 +40,6 @@ export default function Step2Questionnaire({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawnSignature, setHasDrawnSignature] = useState(false);
-  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
   const pointsRef = useRef<{ x: number; y: number }[]>([]);
   const allStrokesRef = useRef<{ x: number; y: number }[][]>([]);
 
@@ -63,20 +59,6 @@ export default function Step2Questionnaire({
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (!privacyPolicyOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPrivacyPolicyOpen(false);
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [privacyPolicyOpen]);
 
   const handleRadioChange = (field: keyof QuestionnaireAnswers, value: string) => {
     onQuestionnaireChange(field, value);
@@ -711,69 +693,6 @@ export default function Step2Questionnaire({
           <p className="mt-2 text-sm text-red-500">{errors.referral}</p>
         )}
       </fieldset>
-
-      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-6 text-center">
-        <button
-          type="button"
-          onClick={() => setPrivacyPolicyOpen(true)}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
-        >
-          <FileText className="w-5 h-5" />
-          Privacy Policy | Zion HealthShare
-        </button>
-      </div>
-
-      {privacyPolicyOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
-          <div
-            role="presentation"
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setPrivacyPolicyOpen(false)}
-          />
-          <div
-            className="relative z-10 flex h-[722px] max-h-[90vh] w-[896px] max-w-[min(896px,calc(100vw-1rem))] min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="privacy-policy-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
-              <h2
-                id="privacy-policy-title"
-                className="pr-2 text-lg font-semibold text-gray-900 sm:text-xl"
-              >
-                Privacy Policy | Zion HealthShare
-              </h2>
-              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                <a
-                  href={PRIVACY_POLICY_PDF}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-blue-800 hover:bg-blue-50"
-                >
-                  <ExternalLink className="h-4 w-4 shrink-0" />
-                  <span className="hidden sm:inline">Open in new tab</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setPrivacyPolicyOpen(false)}
-                  className="shrink-0 rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-                  aria-label="Close privacy policy"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            <div className="min-h-0 flex-1 overflow-hidden p-2 sm:p-3">
-              <iframe
-                title="Zion HealthShare Privacy Policy PDF"
-                src={PRIVACY_POLICY_PDF}
-                className="h-full w-full rounded border border-gray-200"
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <fieldset className="border border-gray-300 rounded-lg p-6 space-y-6">
         <legend className="text-xl font-semibold text-gray-800 px-2">

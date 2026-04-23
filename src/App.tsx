@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import EnrollmentWizard from './components/EnrollmentWizard';
 import PasswordEncryptionTool from './components/PasswordEncryptionTool';
+import ZionPrivacyPolicyFooterLink from './components/ZionPrivacyPolicyFooterLink';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -97,7 +98,8 @@ function App() {
             </div>
             <div className="text-center md:text-right">
               <p className="text-xs text-gray-600">
-                © {new Date().getFullYear()} MPB Health. All rights reserved.
+                © {new Date().getFullYear()} MPB Health. All rights reserved.{' '}
+                <ZionPrivacyPolicyFooterLink />
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 Ensuring privacy and compliance with health information regulations
