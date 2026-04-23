@@ -724,26 +724,27 @@ export default function Step2Questionnaire({
       </div>
 
       {privacyPolicyOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="privacy-policy-title"
-        >
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
           <div
             role="presentation"
             className="absolute inset-0 bg-black/50"
             onClick={() => setPrivacyPolicyOpen(false)}
           />
           <div
-            className="relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl max-h-[90vh] min-h-0"
+            className="relative z-10 flex w-full max-w-6xl max-h-[90vh] min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="privacy-policy-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white px-4 py-3">
-              <h2 id="privacy-policy-title" className="text-lg font-semibold text-gray-900">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+              <h2
+                id="privacy-policy-title"
+                className="pr-2 text-lg font-semibold text-gray-900 sm:text-xl"
+              >
                 Privacy Policy | Zion HealthShare
               </h2>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                 <a
                   href={PRIVACY_POLICY_PDF}
                   target="_blank"
@@ -751,24 +752,25 @@ export default function Step2Questionnaire({
                   className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-blue-800 hover:bg-blue-50"
                 >
                   <ExternalLink className="h-4 w-4 shrink-0" />
-                  Open in new tab
+                  <span className="hidden sm:inline">Open in new tab</span>
                 </a>
                 <button
                   type="button"
                   onClick={() => setPrivacyPolicyOpen(false)}
-                  className="rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  className="shrink-0 rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
                   aria-label="Close privacy policy"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
-            <iframe
-              title="Zion HealthShare Privacy Policy PDF"
-              src={PRIVACY_POLICY_PDF}
-              className="min-h-0 w-full flex-1 border-0"
-              style={{ height: 'min(70vh, 800px)' }}
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
+              <iframe
+                title="Zion HealthShare Privacy Policy PDF"
+                src={PRIVACY_POLICY_PDF}
+                className="h-[min(80vh,920px)] w-full rounded border border-gray-200"
+              />
+            </div>
           </div>
         </div>
       )}
