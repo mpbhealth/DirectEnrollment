@@ -731,7 +731,7 @@ export default function Step2Questionnaire({
             onClick={() => setPrivacyPolicyOpen(false)}
           />
           <div
-            className="relative z-10 flex w-full max-w-6xl max-h-[90vh] min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+            className="relative z-10 flex h-[722px] max-h-[90vh] w-[896px] max-w-[min(896px,calc(100vw-1rem))] min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="privacy-policy-title"
@@ -764,11 +764,11 @@ export default function Step2Questionnaire({
                 </button>
               </div>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
+            <div className="min-h-0 flex-1 overflow-hidden p-2 sm:p-3">
               <iframe
                 title="Zion HealthShare Privacy Policy PDF"
                 src={PRIVACY_POLICY_PDF}
-                className="h-[min(80vh,920px)] w-full rounded border border-gray-200"
+                className="h-full w-full rounded border border-gray-200"
               />
             </div>
           </div>
