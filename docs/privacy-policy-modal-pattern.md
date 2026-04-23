@@ -49,13 +49,14 @@ Switch to a **button** with `type="button"` (avoids submitting forms) and `onCli
 ## 5. PDF display
 
 - Use an `<iframe title="...">` with a short, human-readable `title` (e.g. “Brand Privacy Policy PDF”).
-- Give the iframe a **bounded height** (e.g. `min(70vh, 800px)`) so the modal does not grow past the viewport.
+- Either give the iframe a **bounded height** (e.g. `min(70vh, 800px)`), or use a **fixed-size dialog** and `h-full w-full` on the iframe so it fills the area below the header (see the **Direct Enrollment: exact 896×722** section at the end of this file).
 - Rely on the browser’s built-in PDF plugin when available. If the iframe is blank (strict browser settings or mobile quirks), add an optional “Open in new tab” link in the header pointing to the same PDF URL as a fallback.
 
 ## 6. Stacking and layout
 
 - Use a high `z-index` (e.g. `z-[100]`) so the modal sits above the rest of the app.
-- `max-h-[90vh]` on the panel and `min-h-0` on the scroll/iframe region helps flex layouts not overflow on small screens.
+- For flexible modals, `max-h-[90vh]` on the panel and `min-h-0` on the scroll/iframe region helps flex layouts not overflow on small screens.
+- For a **fixed 896×722** dialog, use `h-[722px] max-h-[90vh]` and `w-[896px] max-w-[min(896px,calc(100vw-1rem))]` on the card so small viewports still fit.
 
 ## 7. Per-project checklist
 
@@ -73,12 +74,140 @@ const PRIVACY_POLICY_PDF = '/assets/Your%20Document%20Name.pdf';
 // or: const PRIVACY_POLICY_PDF = `/assets/${encodeURIComponent('Your Document Name.pdf')}`;
 ```
 
-This document describes the same approach used in **Care+ Enrollment** (Step 2 questionnaire: Zion HealthShare privacy policy PDF modal).
+This document describes the same approach used in **Care+ Enrollment** and **Direct Enrollment** (Zion HealthShare privacy policy PDF modal on Step 2).
 
-## Direct Enrollment (this repo)
+---
 
-Implementation lives in `src/components/Step2Questionnaire.tsx`: the PDF is at **`public/assets/Zion HealthShare Privacy Policy.pdf`**, loaded with an encoded path:
+## Direct Enrollment: exact 896×722 popup
 
-`const PRIVACY_POLICY_PDF = \`/assets/${encodeURIComponent('Zion HealthShare Privacy Policy.pdf')}\`;`
+Use this section to **replicate the same popup** in another project. Implementation source: `src/components/Step2Questionnaire.tsx`.
 
-`iframe` and “Open in new tab” use that same URL. Follow this doc when changing the modal so behavior stays aligned (backdrop `role="presentation"`, body scroll lock, Escape, `aria-label="Close privacy policy"` on the close control, `z-[100]`, `max-h-[90vh]`, bounded iframe height).
+### Fixed dimensions (Tailwind)
+
+| What | Classes / value |
+|------|-----------------|
+| **Width** | `w-[896px]` and `max-w-[min(896px,calc(100vw-1rem))]` so narrow phones don’t overflow horizontally |
+| **Height** | `h-[722px]` and `max-h-[90vh]` so short viewports don’t exceed the screen |
+| **Dialog shell** | `flex flex-col overflow-hidden rounded-lg bg-white shadow-xl` plus `min-h-0` on the card |
+| **Header** | `shrink-0`, `border-b border-gray-200`, `px-4 py-3`, flex row for title + actions |
+| **PDF region** | `min-h-0 flex-1 overflow-hidden p-2 sm:p-3` — iframe is `h-full w-full` inside this |
+
+`role="dialog"`, `aria-modal="true"`, and `aria-labelledby="privacy-policy-title"` sit on the **white card** (not the full-screen wrapper).
+
+### PDF file and URL constant
+
+- On disk: **`public/assets/Zion HealthShare Privacy Policy.pdf`**
+- In code, spaces must be encoded in the URL:
+
+```ts
+const PRIVACY_POLICY_PDF = `/assets/${encodeURIComponent('Zion HealthShare Privacy Policy.pdf')}`;
+```
+
+If you rename the file, change both the `public/assets/...` path and the string inside `encodeURIComponent(...)`.
+
+**Dependencies (Direct Enrollment):** [lucide-react](https://lucide.dev/) — `FileText` (opener button), `X` (close), `ExternalLink` (“Open in new tab”).
+
+### State + effects (body lock and Escape)
+
+```ts
+const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
+
+useEffect(() => {
+  if (!privacyPolicyOpen) return;
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') setPrivacyPolicyOpen(false);
+  };
+  const prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  window.addEventListener('keydown', onKeyDown);
+  return () => {
+    document.body.style.overflow = prevOverflow;
+    window.removeEventListener('keydown', onKeyDown);
+  };
+}, [privacyPolicyOpen]);
+```
+
+### Open button (same label as the dialog title)
+
+```tsx
+<button
+  type="button"
+  onClick={() => setPrivacyPolicyOpen(true)}
+  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+>
+  <FileText className="w-5 h-5" />
+  Privacy Policy | Zion HealthShare
+</button>
+```
+
+### Full modal markup (drop-in, replace `PRIVACY_POLICY_PDF` / copy as needed)
+
+```tsx
+{privacyPolicyOpen && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
+    <div
+      role="presentation"
+      className="absolute inset-0 bg-black/50"
+      onClick={() => setPrivacyPolicyOpen(false)}
+    />
+    <div
+      className="relative z-10 flex h-[722px] max-h-[90vh] w-[896px] max-w-[min(896px,calc(100vw-1rem))] min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="privacy-policy-title"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+        <h2
+          id="privacy-policy-title"
+          className="pr-2 text-lg font-semibold text-gray-900 sm:text-xl"
+        >
+          Privacy Policy | Zion HealthShare
+        </h2>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <a
+            href={PRIVACY_POLICY_PDF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-blue-800 hover:bg-blue-50"
+          >
+            <ExternalLink className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Open in new tab</span>
+          </a>
+          <button
+            type="button"
+            onClick={() => setPrivacyPolicyOpen(false)}
+            className="shrink-0 rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+            aria-label="Close privacy policy"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-hidden p-2 sm:p-3">
+        <iframe
+          title="Zion HealthShare Privacy Policy PDF"
+          src={PRIVACY_POLICY_PDF}
+          className="h-full w-full rounded border border-gray-200"
+        />
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### Close behavior (checklist)
+
+- [ ] Backdrop click closes (`role="presentation"` layer).
+- [ ] Clicks on the white card do **not** close (`stopPropagation` on the card).
+- [ ] `Escape` closes (see effect above).
+- [ ] Close button: `aria-label="Close privacy policy"`.
+- [ ] `type="button"` on open/close buttons so a surrounding `<form>` does not submit by accident.
+
+### Replicating in a non–Tailwind / non-React project
+
+- Outer overlay: `position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 0.5rem 1rem;`
+- Backdrop: `position: absolute; inset: 0; background: rgb(0 0 0 / 0.5);`
+- Card: `896px` × `722px` (max), `max-width: min(896px, calc(100vw - 1rem))`, `max-height: 90vh`, `display: flex; flex-direction: column; overflow: hidden; border-radius: 0.5rem; background: #fff; box-shadow: ...`
+- Iframe container: `flex: 1; min-height: 0; overflow: hidden; padding: ...`
+- Iframe: `width: 100%; height: 100%; box-sizing: border-box;` with a light border to match the rounded corners.
