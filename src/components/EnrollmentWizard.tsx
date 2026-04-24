@@ -985,6 +985,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
         lastName: formData.lastName,
         benefitId: formData.benefitId,
         enrollmentDate: new Date().toISOString(),
+        enrollmentMemberId,
       }));
 
       const pdfResponse = await fetch(pdfApiUrl, {
@@ -1008,10 +1009,8 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
 
       if (pdfResult.success && pdfResult.pdfUrl) {
         setPdfUrl(pdfResult.pdfUrl);
-
         if (enrollmentMemberId) {
           await sendPdfToGateway(enrollmentMemberId, pdfResult.pdfUrl);
-        } else {
         }
       } else {
         throw new Error(pdfResult.error || 'PDF upload failed');

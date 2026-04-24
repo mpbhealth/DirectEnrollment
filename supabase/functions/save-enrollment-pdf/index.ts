@@ -108,6 +108,10 @@ Deno.serve(async (req: Request) => {
         onConflict: 'customer_email'
       });
 
+    if (dbError) {
+      console.error('[save-enrollment-pdf] enrollment_pdfs upsert failed:', dbError.message);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
