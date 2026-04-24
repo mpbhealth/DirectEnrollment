@@ -1,6 +1,7 @@
 import { Users, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Dependent } from '../hooks/useEnrollmentStorage';
 import { formatPhoneNumber, formatSSN } from '../utils/formatters';
+import { getDependentEmailDuplicateError } from '../utils/dependentEmailValidation';
 import { useState, useEffect } from 'react';
 
 interface DependentsAddressSectionProps {
@@ -43,8 +44,30 @@ export default function DependentsAddressSection({
     setUseSameAddress(initialState);
   }, [dependents]);
 
-  // Merge external errors (from wizard validation) with local errors
-  const errors = { ...localErrors, ...externalErrors };
+  // Optional: when subscriber email changes, refresh duplicate for the open dependent (see pattern doc §7)
+  useEffect(() => {
+    if (selectedDependentIndex === null) return;
+    const idx = selectedDependentIndex;
+    const d = dependents[idx];
+    const raw = d?.email ?? '';
+    const duplicateMsg = getDependentEmailDuplicateError(
+      raw,
+      idx,
+      dependents,
+      subscriberAddress?.email ?? ''
+    );
+    const key = `dependent_${idx}_email`;
+    setLocalErrors((prev) => {
+      const next = { ...prev };
+      if (duplicateMsg) next[key] = duplicateMsg;
+      else delete next[key];
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when subscriber email changes, not every dependents keystroke
+  }, [subscriberAddress?.email]);
+
+  // Parent (submit) errors first; local (blur) wins for the same key
+  const errors = { ...externalErrors, ...localErrors };
 
   if (dependents.length === 0) {
     return null;
@@ -114,6 +137,29 @@ export default function DependentsAddressSection({
     setSelectedDependentIndex(index);
     setLocalErrors({});
     setShowDepSSN(false);
+  };
+
+  const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (selectedDependentIndex === null) return;
+    const emailValue = e.currentTarget.value;
+    const idx = selectedDependentIndex;
+    const dependentsForCheck = dependents.map((d, i) =>
+      i === idx ? { ...d, email: emailValue } : d
+    );
+    const mainEmail = subscriberAddress?.email ?? '';
+    const duplicateMsg = getDependentEmailDuplicateError(
+      emailValue,
+      idx,
+      dependentsForCheck,
+      mainEmail
+    );
+    const key = `dependent_${idx}_email`;
+    setLocalErrors((prev) => {
+      const next = { ...prev };
+      if (duplicateMsg) next[key] = duplicateMsg;
+      else delete next[key];
+      return next;
+    });
   };
 
   const handleSameAddress = () => {
@@ -392,8 +438,10 @@ export default function DependentsAddressSection({
                   </label>
                   <input
                     type="email"
+                    name={`dependent_${selectedDependentIndex}_email`}
                     value={selectedDependent.email || ''}
                     onChange={(e) => handleFieldChange('email', e.target.value)}
+                    onBlur={handleEmailBlur}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                       errors[`dependent_${selectedDependentIndex}_email`] ? 'border-red-500' : 'border-gray-300'
                     }`}
