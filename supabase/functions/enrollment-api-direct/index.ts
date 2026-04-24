@@ -247,10 +247,16 @@ async function insertDirectLogSafe(
       externalResponse: params.externalResponse ?? null,
     };
 
+    const responseColumn =
+      params.externalResponse === undefined || params.externalResponse === null
+        ? null
+        : JSON.stringify(params.externalResponse);
+
     const { error } = await supabase.from("direct_log").insert({
       log: JSON.stringify(logObj),
       request_payload: requestPayload,
       payload_size_bytes: payloadSizeBytes,
+      response: responseColumn,
     });
     if (error) {
       console.error("[direct_log] insert failed:", error.message);
