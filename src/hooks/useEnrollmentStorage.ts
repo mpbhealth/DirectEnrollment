@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { calculateEffectiveDates } from '../utils/dateCalculations';
+import { DEFAULT_PROMO_PDID } from '../constants/promoDefaults';
 
 export interface Dependent {
   firstName: string;
@@ -163,7 +164,7 @@ const createDefaultFormData = (benefitId: string | null, agentId: string = ''): 
       typedSignature: '',
       referral: '',
     },
-    pdid: 42465,
+    pdid: DEFAULT_PROMO_PDID,
     promoCode: '',
     appliedPromo: null,
   };

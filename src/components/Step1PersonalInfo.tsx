@@ -183,6 +183,7 @@ export default function Step1PersonalInfo({
         benefitId={formData.benefitId}
         memberDOB={formData.dob}
         smoker={formData.smoker}
+        pdid={formData.pdid}
         errors={errors}
         onBenefitIdChange={onBenefitIdChange}
         promoCode={formData.promoCode}

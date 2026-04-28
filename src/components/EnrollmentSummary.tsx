@@ -13,6 +13,7 @@ interface EnrollmentSummaryProps {
   benefitId: string | null;
   memberDOB: string;
   smoker: string;
+  pdid: number;
   errors?: Record<string, string>;
   onBenefitIdChange: (benefitId: string) => void;
   promoCode: string;
@@ -36,6 +37,7 @@ export default function EnrollmentSummary({
   benefitId,
   memberDOB,
   smoker,
+  pdid,
   errors = {},
   onBenefitIdChange,
   promoCode,
@@ -58,7 +60,7 @@ export default function EnrollmentSummary({
     setIsValidatingPromo(true);
     setPromoError('');
 
-    const result = await validatePromoCode(promoCode);
+    const result = await validatePromoCode(promoCode, pdid);
 
     setIsValidatingPromo(false);
 
