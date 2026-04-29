@@ -36,6 +36,10 @@ function promoRowMatchesEnrollmentProduct(
   if (p === "") return true;
   const upper = p.toUpperCase();
   if (upper === "*" || upper === "ALL" || upper === "ANY") return true;
+  if (/^\d+$/.test(p)) {
+    const n = parseInt(p, 10);
+    if (!Number.isNaN(n) && n === effectivePdId) return true;
+  }
   return p === String(effectivePdId);
 }
 
@@ -685,6 +689,7 @@ Deno.serve(async (req: Request) => {
           .select("discount_amount, product")
           .ilike("code", escaped)
           .eq("active", true)
+          .order("id", { ascending: true })
           .limit(1);
 
         const promoRow = promoRows?.[0];

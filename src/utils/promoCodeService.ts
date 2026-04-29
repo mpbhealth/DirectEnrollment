@@ -18,7 +18,7 @@ export function effectivePdid(userPdid?: number | null): number {
   return !Number.isNaN(n) && n > 0 ? Math.floor(n) : DEFAULT_PROMO_PDID;
 }
 
-/** Matches docs/promocode.md §4: empty row, asterisk/ALL/ANY, else must equal enrollment PDID string. */
+/** Matches docs/promocode.md §4: empty row, asterisk/ALL/ANY, else PDID string or same numeric value. */
 export function promoRowMatchesEnrollmentProduct(
   productRaw: string | null | undefined,
   effectivePdId: number,
@@ -27,6 +27,10 @@ export function promoRowMatchesEnrollmentProduct(
   if (p === '') return true;
   const upper = p.toUpperCase();
   if (upper === '*' || upper === 'ALL' || upper === 'ANY') return true;
+  if (/^\d+$/.test(p)) {
+    const n = parseInt(p, 10);
+    if (!Number.isNaN(n) && n === effectivePdId) return true;
+  }
   return p === String(effectivePdId);
 }
 
@@ -58,6 +62,7 @@ export async function validatePromoCode(
       .select('code, product, discount_amount')
       .ilike('code', escaped)
       .eq('active', true)
+      .order('id', { ascending: true })
       .limit(1);
 
     if (error) {

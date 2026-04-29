@@ -15,6 +15,11 @@ This document describes how enrollment promocodes work in this codebase pattern 
 
 Historical note: sibling repos may reference different PDIDs; this file’s **canonical default for Direct Enrollment** is **`42465`**.
 
+**Troubleshooting — “This promo code is not valid for this enrollment product.”**
+
+The **`code`** was found (**ilike**) but **`promocodes.product`** did not match the enrollment’s effective PDID (**`42465`** by default). **Fix the row**, not uniqueness: set **`product`** to **`42465`** (string), or a wildcard (**`*`**, **`ALL`**, **`ANY`**, or empty string if your column allows blank), then re-apply.
+
+
 ---
 
 ## 1. What you are implementing
@@ -52,16 +57,16 @@ Reference migration shape:
 | Column | Notes |
 |--------|--------|
 | `id` | UUID PK |
-| `code` | **UNIQUE** — each promo string appears once (different codes can share the same `product`). |
-| `product` | **Not unique.** Stores the product scope: typically **`"<PDID>"`** as text (e.g. `"42465"` for Direct Enrollment only). See wildcards below. |
+| `code` | Text; uniqueness removed in [`20260428120000_drop_promocodes_code_unique.sql`](../supabase/migrations/20260428120000_drop_promocodes_code_unique.sql). Lookups **`order(id)` + `limit(1)`** for deterministic pick when duplicates exist; avoid unintended duplicate (**`code`** + **`product`**) pairs. |
+| `product` | Stores the product scope (see §4): typically **`"42465"`** for Direct Enrollment-only rows, or a wildcard (**`*`** / **`ALL`** / **`ANY`**). **`NOT NULL`** in DB: use **`'*'`** or **`ALL`** for “any product” (empty string is also treated as wildcard in app matching when present). |
 | `discount_amount` | Non-negative numeric; dollars subtracted from initial payment. |
 | `active` | Boolean; only `active = true` rows participate in validation. |
 
 **RLS:** Policy that allows **anonymous `SELECT`** for rows with `active = true` is typical so the browser can validate without a logged-in user. Inserts/updates remain admin-only.
 
-**Indexes:** Unique on `code`; optional index on `active`.
+**Indexes:** Non-unique index on **`code`** after drop migration; index on **`active`** (optional).
 
-Migration: [`supabase/migrations/20260123163522_create_promocodes_table.sql`](../supabase/migrations/20260123163522_create_promocodes_table.sql)
+Historical create migration: [`20260123163522_create_promocodes_table.sql`](../supabase/migrations/20260123163522_create_promocodes_table.sql) — supplemented by **`20260428120000_drop_promocodes_code_unique.sql`** above.
 
 ---
 
@@ -76,9 +81,10 @@ effective_pdid = (user_pdid is number && user_pdid > 0) ? user_pdid : DEFAULT_PR
 A promocode row **matches** the enrollment when:
 
 1. **`product` is empty**, or equals (case-insensitive) **`*`**, **`ALL`**, or **`ANY`** → code applies to any enrollment (wildcard rows).
-2. Otherwise **`product`** (normalized) must equal **`String(effective_pdid)`** (normalized).
+2. Otherwise, if **`product`** is all digits, **parseInt(product, 10)** must equal **`effective_pdid`** (covers values stored as numeric text without leading zeros issues for normal PDIDs).
+3. Otherwise **`product`** must equal **`String(effective_pdid)`** as plain text.
 
-**Multiple codes per product:** Many rows may use the same `product` value (same PDID). **`code` stays unique** across the table.
+**Multiple codes per product:** Many rows may use the same **`product`** value (same PDID). **Duplicate `code` values are allowed** (same code string scoped by different **`product`** or other dimensions); lookups use **`order by id`** and **`limit 1`**.
 
 ---
 
