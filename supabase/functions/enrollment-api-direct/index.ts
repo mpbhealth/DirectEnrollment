@@ -27,20 +27,32 @@ function effectivePdidEnrollment(userPdid?: number): number {
   return !Number.isNaN(n) && n > 0 ? Math.floor(n) : DEFAULT_PROMO_PDID_EDGE;
 }
 
-/** Byte-aligned with `promoRowMatchesEnrollmentProduct`. */
+/** Byte-aligned with `normalizeProduct` in promoCodeService.ts */
+function normalizeProduct(raw: unknown): string {
+  if (raw === null || raw === undefined) return "";
+  if (typeof raw === "number" && Number.isFinite(raw)) return String(raw).trim();
+  return String(raw).replace(/\u00a0/g, " ").trim();
+}
+
+/** Byte-aligned with `promoRowMatchesEnrollmentProduct` in promoCodeService.ts */
 function promoRowMatchesEnrollmentProduct(
-  productRaw: string | null | undefined,
+  productRaw: string | number | null | undefined,
   effectivePdId: number,
 ): boolean {
-  const p = String(productRaw ?? "").trim();
-  if (p === "") return true;
-  const upper = p.toUpperCase();
+  const eff = Number(effectivePdId);
+  const s = normalizeProduct(productRaw);
+
+  if (s === "") return true;
+  const upper = s.toUpperCase();
   if (upper === "*" || upper === "ALL" || upper === "ANY") return true;
-  if (/^\d+$/.test(p)) {
-    const n = parseInt(p, 10);
-    if (!Number.isNaN(n) && n === effectivePdId) return true;
+
+  const condensed = s.replace(/\s+/g, "").replace(/,/g, "");
+  if (/^-?\d+(?:\.\d+)?$/.test(condensed)) {
+    const n = Number(condensed);
+    if (Number.isFinite(n) && n === eff) return true;
   }
-  return p === String(effectivePdId);
+
+  return s === String(eff) || condensed === String(eff);
 }
 
 function decryptPassword(encryptedPassword: string): string {
@@ -682,23 +694,28 @@ Deno.serve(async (req: Request) => {
 
       try {
         const escaped = escapePromoCodeForILike(trimmed);
+        const ilikePattern = `%${escaped}%`;
         const eff = effectivePdidEnrollment(requestData.pdid);
 
         const { data: promoRows, error: promoError } = await supabase
           .from("promocodes")
-          .select("discount_amount, product")
-          .ilike("code", escaped)
+          .select("code, discount_amount, product")
+          .ilike("code", ilikePattern)
           .eq("active", true)
           .order("id", { ascending: true })
-          .limit(1);
+          .limit(40);
 
-        const promoRow = promoRows?.[0];
-        const rowRaw = promoRow as { discount_amount: string | number; product: string } | undefined;
-        if (
-          !promoError &&
-          rowRaw &&
-          promoRowMatchesEnrollmentProduct(rowRaw.product, eff)
-        ) {
+        type PromoPick = { code: string; discount_amount: string | number; product: string | number };
+        const trimmedLower = trimmed.toLowerCase();
+        const eligible = (promoRows as PromoPick[] | null | undefined)?.filter((row) =>
+          promoRowMatchesEnrollmentProduct(row.product, eff),
+        ) ?? [];
+
+        const rowRaw =
+          eligible.find((r) => String(r.code ?? "").trim().toLowerCase() === trimmedLower) ??
+          eligible[0];
+
+        if (!promoError && rowRaw) {
           const discountAmount = parseFloat(String(rowRaw.discount_amount));
 
           if (!isNaN(discountAmount) && discountAmount >= 0) {

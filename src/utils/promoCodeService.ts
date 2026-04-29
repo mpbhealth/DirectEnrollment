@@ -18,20 +18,35 @@ export function effectivePdid(userPdid?: number | null): number {
   return !Number.isNaN(n) && n > 0 ? Math.floor(n) : DEFAULT_PROMO_PDID;
 }
 
-/** Matches docs/promocode.md §4: empty row, asterisk/ALL/ANY, else PDID string or same numeric value. */
+/** Normalizes Postgres/JSON variants: number, spaced text, commas, NBSP. */
+export function normalizeProduct(raw: unknown): string {
+  if (raw === null || raw === undefined) return '';
+  if (typeof raw === 'number' && Number.isFinite(raw)) return String(raw).trim();
+  return String(raw).replace(/\u00a0/g, ' ').trim();
+}
+
+/**
+ * Matches docs/promocode.md §4.
+ * Handles `product` as text or JSON number (`42465` vs `"42465"`) and minor formatting.
+ */
 export function promoRowMatchesEnrollmentProduct(
-  productRaw: string | null | undefined,
+  productRaw: string | number | null | undefined,
   effectivePdId: number,
 ): boolean {
-  const p = String(productRaw ?? '').trim();
-  if (p === '') return true;
-  const upper = p.toUpperCase();
+  const eff = Number(effectivePdId);
+  const s = normalizeProduct(productRaw);
+
+  if (s === '') return true;
+  const upper = s.toUpperCase();
   if (upper === '*' || upper === 'ALL' || upper === 'ANY') return true;
-  if (/^\d+$/.test(p)) {
-    const n = parseInt(p, 10);
-    if (!Number.isNaN(n) && n === effectivePdId) return true;
+
+  const condensed = s.replace(/\s+/g, '').replace(/,/g, '');
+  if (/^-?\d+(?:\.\d+)?$/.test(condensed)) {
+    const n = Number(condensed);
+    if (Number.isFinite(n) && n === eff) return true;
   }
-  return p === String(effectivePdId);
+
+  return s === String(eff) || condensed === String(eff);
 }
 
 export async function validatePromoCode(
@@ -54,16 +69,19 @@ export async function validatePromoCode(
 
   const trimmed = code.trim();
   const escaped = escapePromoCodeForILike(trimmed);
+  /** Substring `ilike`; escaped keeps `_`/`%` in user-entered codes literal vs LIKE wildcards. */
+  const ilikePattern = `%${escaped}%`;
   const eff = effectivePdid(pdid ?? null);
+  const codeLower = trimmed.toLowerCase();
 
   try {
     const { data: rows, error } = await supabase
       .from('promocodes')
       .select('code, product, discount_amount')
-      .ilike('code', escaped)
+      .ilike('code', ilikePattern)
       .eq('active', true)
       .order('id', { ascending: true })
-      .limit(1);
+      .limit(40);
 
     if (error) {
       console.error('Error validating promo code:', error);
@@ -73,18 +91,26 @@ export async function validatePromoCode(
       };
     }
 
-    const row = rows?.[0];
+    /** Rows whose code text matches enrollment (prefer exact trimmed case-insensitive, else first PDID-qualified row among ilike substring hits). */
+    const eligible =
+      rows?.filter((row) =>
+        promoRowMatchesEnrollmentProduct(row.product, eff),
+      ) ?? [];
+
+    const row =
+      eligible.find((r) => String(r.code ?? '').trim().toLowerCase() === codeLower) ??
+      eligible[0];
+
     if (!row) {
+      if ((rows?.length ?? 0) > 0) {
+        return {
+          success: false,
+          error: 'This promo code is not valid for this enrollment product.',
+        };
+      }
       return {
         success: false,
         error: 'Invalid promo code',
-      };
-    }
-
-    if (!promoRowMatchesEnrollmentProduct(row.product, eff)) {
-      return {
-        success: false,
-        error: 'This promo code is not valid for this enrollment product.',
       };
     }
 
@@ -92,7 +118,7 @@ export async function validatePromoCode(
       success: true,
       promo: {
         code: row.code,
-        product: row.product,
+        product: String(row.product),
         discountAmount: parseFloat(String(row.discount_amount)),
       },
     };
