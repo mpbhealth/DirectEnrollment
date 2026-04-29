@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useEnrollmentStorage, Dependent, PaymentInfo, QuestionnaireAnswers } from '../hooks/useEnrollmentStorage';
+import {
+  useEnrollmentStorage,
+  AppliedPromo,
+  Dependent,
+  PaymentInfo,
+  QuestionnaireAnswers,
+} from '../hooks/useEnrollmentStorage';
 import { getDirectEnrollmentPricingOptions, calculateAgeFromDOB } from '../utils/pricingLogic';
 import { generateEnrollmentPDF } from '../utils/generateEnrollmentPDF';
 import { getDependentEmailDuplicateError } from '../utils/dependentEmailValidation';
@@ -635,12 +641,13 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
     }
   };
 
+  /** Functional updates so sequential promo clears (Remove) cannot resurrect stale `promoCode` from closure. */
   const handlePromoCodeChange = (code: string) => {
-    saveFormData({ ...formData, promoCode: code });
+    saveFormData(prev => ({ ...prev, promoCode: code }));
   };
 
-  const handleAppliedPromoChange = (promo: any) => {
-    saveFormData({ ...formData, appliedPromo: promo });
+  const handleAppliedPromoChange = (promo: AppliedPromo | null) => {
+    saveFormData(prev => ({ ...prev, appliedPromo: promo }));
   };
 
 

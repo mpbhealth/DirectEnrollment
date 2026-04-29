@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { calculateEffectiveDates } from '../utils/dateCalculations';
 import { DEFAULT_PROMO_PDID } from '../constants/promoDefaults';
 
@@ -192,8 +199,8 @@ export function useEnrollmentStorage(benefitId: string | null, agentId: string =
     }));
   }, [benefitId]);
 
-  const saveFormData = useCallback((data: FormData) => {
-    setFormData(data);
+  const saveFormData: Dispatch<SetStateAction<FormData>> = useCallback(update => {
+    setFormData(update);
   }, []);
 
   const saveStep = useCallback((step: number) => {
