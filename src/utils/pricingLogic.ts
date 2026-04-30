@@ -276,10 +276,27 @@ export function getCoverageType(dependents: Dependent[]): 'Member Only' | 'Membe
   return 'Member + Family';
 }
 
-export function getDirectEnrollmentPricingOptions(memberDOB: string, dependents: Dependent[]): DirectEnrollmentPricingResult {
-  const age = calculateAgeFromDOB(memberDOB);
+/**
+ * Ages with parseable MM/DD/YYYY DOBs (primary first, then dependents).
+ * Dependents with missing/invalid DOBs are skipped until entry is complete.
+ * Someone 65+ included here drives getAgeRange to null (household ineligible for 18–64 tiers).
+ */
+function collectHouseholdAges(primaryDob: string, dependents: Dependent[]): number[] {
+  const ages: number[] = [];
+  const primaryAge = calculateAgeFromDOB(primaryDob);
+  if (primaryAge !== null) ages.push(primaryAge);
+  for (const dep of dependents) {
+    const a = calculateAgeFromDOB(dep.dob);
+    if (a !== null) ages.push(a);
+  }
+  return ages;
+}
 
-  if (age === null) {
+/** Direct Enrollment IUA prices: age tier uses the oldest household member with a valid DOB (primary + dependents). */
+export function getDirectEnrollmentPricingOptions(memberDOB: string, dependents: Dependent[]): DirectEnrollmentPricingResult {
+  const ages = collectHouseholdAges(memberDOB, dependents);
+
+  if (ages.length === 0) {
     return {
       options: [],
       isAvailable: false,
@@ -288,7 +305,8 @@ export function getDirectEnrollmentPricingOptions(memberDOB: string, dependents:
     };
   }
 
-  const ageRange = getAgeRange(age);
+  const pricingAge = Math.max(...ages);
+  const ageRange = getAgeRange(pricingAge);
 
   if (!ageRange) {
     return {
