@@ -130,7 +130,7 @@ Naming can be `subscriberContact` rather than address-only; clarity matters more
 For primary **phone** and **SSN** fields on the enrollment step:
 
 - Compute **derived duplicate** strings with **`useMemo`**: call `getPrimarySubscriberPhoneDuplicateError` / `getPrimarySubscriberSsnDuplicateError` when `dependents.length > 0`.
-- **`fieldError = errors.phone ‖ derivedDuplicate ‖ ''`** (and same for SSN) so:
+- **`fieldError`** = `$errors.phone` **or** the derived duplicate message **or** empty string (same pattern for SSN) so:
   - required / length failures from wizard still show after failed submit,
   - duplicates appear as soon as both sides have complete digits,
   - editing clears wizard `errors` via existing `onChange` behavior while derived duplicate may still apply until uniqueness is restored.
