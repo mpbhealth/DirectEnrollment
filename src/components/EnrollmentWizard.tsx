@@ -9,6 +9,12 @@ import {
 import { getDirectEnrollmentPricingOptions, calculateAgeFromDOB } from '../utils/pricingLogic';
 import { generateEnrollmentPDF } from '../utils/generateEnrollmentPDF';
 import { getDependentEmailDuplicateError } from '../utils/dependentEmailValidation';
+import {
+  getDependentPhoneDuplicateError,
+  getDependentSsnDuplicateError,
+  getPrimarySubscriberPhoneDuplicateError,
+  getPrimarySubscriberSsnDuplicateError,
+} from '../utils/dependentPhoneSsnDuplicateValidation';
 import { encryptSensitiveFields } from '../utils/payloadEncryption';
 import ProgressIndicator from './ProgressIndicator';
 import Step1PersonalInfo from './Step1PersonalInfo';
@@ -224,6 +230,11 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       const phoneDigits = formData.phone.replace(/\D/g, '');
       if (phoneDigits.length !== 10) {
         newErrors.phone = 'Phone number must be exactly 10 digits';
+      } else {
+        const dupPhone = getPrimarySubscriberPhoneDuplicateError(formData.phone, formData.dependents);
+        if (dupPhone) {
+          newErrors.phone = dupPhone;
+        }
       }
     }
     if (!formData.ssn.trim()) {
@@ -232,6 +243,11 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       const ssnDigits = formData.ssn.replace(/\D/g, '');
       if (ssnDigits.length !== 9) {
         newErrors.ssn = 'Social Security number must be exactly 9 digits';
+      } else {
+        const dupSsn = getPrimarySubscriberSsnDuplicateError(formData.ssn, formData.dependents);
+        if (dupSsn) {
+          newErrors.ssn = dupSsn;
+        }
       }
     }
     if (!formData.gender.trim()) newErrors.gender = 'Gender is required';
@@ -327,6 +343,17 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
         if (phoneDigits.length !== 10) {
           newErrors[`${prefix}phone`] = 'Phone must be exactly 10 digits';
           hasError = true;
+        } else {
+          const dupPhoneMsg = getDependentPhoneDuplicateError(
+            dependent.phone,
+            index,
+            formData.dependents,
+            formData.phone ?? ''
+          );
+          if (dupPhoneMsg) {
+            newErrors[`${prefix}phone`] = dupPhoneMsg;
+            hasError = true;
+          }
         }
       }
       if (!dependent.ssn?.trim()) {
@@ -337,6 +364,17 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
         if (ssnDigits.length !== 9) {
           newErrors[`${prefix}ssn`] = 'Social Security must be exactly 9 digits';
           hasError = true;
+        } else {
+          const dupSsnMsg = getDependentSsnDuplicateError(
+            dependent.ssn,
+            index,
+            formData.dependents,
+            formData.ssn ?? ''
+          );
+          if (dupSsnMsg) {
+            newErrors[`${prefix}ssn`] = dupSsnMsg;
+            hasError = true;
+          }
         }
       }
       if (!dependent.gender?.trim()) {

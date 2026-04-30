@@ -2,6 +2,10 @@ import { Users, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Dependent } from '../hooks/useEnrollmentStorage';
 import { formatPhoneNumber, formatSSN } from '../utils/formatters';
 import { getDependentEmailDuplicateError } from '../utils/dependentEmailValidation';
+import {
+  getDependentPhoneDuplicateError,
+  getDependentSsnDuplicateError,
+} from '../utils/dependentPhoneSsnDuplicateValidation';
 import { useState, useEffect } from 'react';
 
 interface DependentsAddressSectionProps {
@@ -13,6 +17,8 @@ interface DependentsAddressSectionProps {
     state: string;
     zipcode: string;
     email: string;
+    phone?: string;
+    ssn?: string;
   };
   errors?: Record<string, string>;
   onClearError?: (field: string) => void;
@@ -44,27 +50,46 @@ export default function DependentsAddressSection({
     setUseSameAddress(initialState);
   }, [dependents]);
 
-  // Optional: when subscriber email changes, refresh duplicate for the open dependent (see pattern doc §7)
+  // When subscriber contact fields change, refresh duplicate checks for the open dependent (see dependent-email pattern doc)
   useEffect(() => {
     if (selectedDependentIndex === null) return;
     const idx = selectedDependentIndex;
     const d = dependents[idx];
-    const raw = d?.email ?? '';
-    const duplicateMsg = getDependentEmailDuplicateError(
-      raw,
+    const emailMsg = getDependentEmailDuplicateError(
+      d?.email ?? '',
       idx,
       dependents,
       subscriberAddress?.email ?? ''
     );
-    const key = `dependent_${idx}_email`;
+    const phoneMsg = getDependentPhoneDuplicateError(
+      d?.phone ?? '',
+      idx,
+      dependents,
+      subscriberAddress?.phone ?? ''
+    );
+    const ssnMsg = getDependentSsnDuplicateError(
+      d?.ssn ?? '',
+      idx,
+      dependents,
+      subscriberAddress?.ssn ?? ''
+    );
+
+    const emailKey = `dependent_${idx}_email`;
+    const phoneKey = `dependent_${idx}_phone`;
+    const ssnKey = `dependent_${idx}_ssn`;
+
     setLocalErrors((prev) => {
       const next = { ...prev };
-      if (duplicateMsg) next[key] = duplicateMsg;
-      else delete next[key];
+      if (emailMsg) next[emailKey] = emailMsg;
+      else delete next[emailKey];
+      if (phoneMsg) next[phoneKey] = phoneMsg;
+      else delete next[phoneKey];
+      if (ssnMsg) next[ssnKey] = ssnMsg;
+      else delete next[ssnKey];
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when subscriber email changes, not every dependents keystroke
-  }, [subscriberAddress?.email]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when subscriber fields change, not every dependents keystroke
+  }, [subscriberAddress?.email, subscriberAddress?.phone, subscriberAddress?.ssn]);
 
   // Parent (submit) errors first; local (blur) wins for the same key
   const errors = { ...externalErrors, ...localErrors };
@@ -154,6 +179,52 @@ export default function DependentsAddressSection({
       mainEmail
     );
     const key = `dependent_${idx}_email`;
+    setLocalErrors((prev) => {
+      const next = { ...prev };
+      if (duplicateMsg) next[key] = duplicateMsg;
+      else delete next[key];
+      return next;
+    });
+  };
+
+  const handlePhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (selectedDependentIndex === null) return;
+    const phoneValue = e.currentTarget.value;
+    const idx = selectedDependentIndex;
+    const dependentsForCheck = dependents.map((d, i) =>
+      i === idx ? { ...d, phone: phoneValue } : d
+    );
+    const mainPhone = subscriberAddress?.phone ?? '';
+    const duplicateMsg = getDependentPhoneDuplicateError(
+      phoneValue,
+      idx,
+      dependentsForCheck,
+      mainPhone
+    );
+    const key = `dependent_${idx}_phone`;
+    setLocalErrors((prev) => {
+      const next = { ...prev };
+      if (duplicateMsg) next[key] = duplicateMsg;
+      else delete next[key];
+      return next;
+    });
+  };
+
+  const handleSsnBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (selectedDependentIndex === null) return;
+    const ssnValue = e.currentTarget.value;
+    const idx = selectedDependentIndex;
+    const dependentsForCheck = dependents.map((d, i) =>
+      i === idx ? { ...d, ssn: ssnValue } : d
+    );
+    const mainSsn = subscriberAddress?.ssn ?? '';
+    const duplicateMsg = getDependentSsnDuplicateError(
+      ssnValue,
+      idx,
+      dependentsForCheck,
+      mainSsn
+    );
+    const key = `dependent_${idx}_ssn`;
     setLocalErrors((prev) => {
       const next = { ...prev };
       if (duplicateMsg) next[key] = duplicateMsg;
@@ -465,6 +536,7 @@ export default function DependentsAddressSection({
                       type="tel"
                       value={selectedDependent.phone || ''}
                       onChange={(e) => handleFieldChange('phone', e.target.value)}
+                      onBlur={handlePhoneBlur}
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors[`dependent_${selectedDependentIndex}_phone`] ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -489,6 +561,7 @@ export default function DependentsAddressSection({
                         type={!showDepSSN && !supportsTextSecurity ? 'password' : 'text'}
                         value={selectedDependent.ssn || ''}
                         onChange={(e) => handleFieldChange('ssn', e.target.value)}
+                        onBlur={handleSsnBlur}
                         autoComplete="new-password"
                         style={!showDepSSN && supportsTextSecurity ? { WebkitTextSecurity: 'disc' } : undefined}
                         className={`w-full px-4 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
