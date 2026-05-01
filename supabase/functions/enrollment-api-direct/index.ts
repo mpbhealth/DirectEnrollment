@@ -55,6 +55,41 @@ function promoRowMatchesEnrollmentProduct(
   return s === String(eff) || condensed === String(eff);
 }
 
+/** Byte-aligned with EnrollmentWizard `validateDateInput` for dependent DOBs. */
+function validateDependentDobFormat(value: string): boolean {
+  if (value.length !== 10) return false;
+
+  const [month, day, year] = value.split("/").map((num) => parseInt(num, 10));
+
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  if (year < 1925 || year > 2025) return false;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day > daysInMonth) return false;
+
+  return true;
+}
+
+/** Byte-aligned with src/utils/pricingLogic.ts `calculateAgeFromDOB`. */
+function calculateAgeFromDOB(dob: string): number | null {
+  if (!dob || dob.length !== 10) return null;
+
+  const [month, day, year] = dob.split("/").map((num) => parseInt(num, 10));
+  if (!month || !day || !year) return null;
+
+  const birthDate = new Date(year, month - 1, day);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+
+  return age;
+}
+
 function decryptPassword(encryptedPassword: string): string {
   try {
     const secretKey = Deno.env.get("VITE_ENCRYPTION_SECRET_KEY");
@@ -502,6 +537,52 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    for (let i = 0; i < requestData.dependents.length; i++) {
+      const dep = requestData.dependents[i];
+      const dobTrim = dep.dob?.trim() ?? "";
+      if (!dobTrim) continue;
+      if (!validateDependentDobFormat(dobTrim)) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            status: 400,
+            error: `Invalid date of birth for dependent ${i + 1}. Please use MM/DD/YYYY.`,
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      const age = calculateAgeFromDOB(dobTrim);
+      if (dep.relationship === "Spouse" && age !== null && age < 18) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            status: 400,
+            error: "Must be 18 years or older to enroll",
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      if (dep.relationship === "Child" && age !== null && age >= 26) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            status: 400,
+            error: "Dependent children must be under 26 years of age",
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
     }
 
     const ssnDigits = requestData.ssn.replace(/\D/g, '');
