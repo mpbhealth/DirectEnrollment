@@ -340,7 +340,7 @@ function buildZohoContactData(
     Contact_Status: "New Enrollment",
     Carrier: "Direct Enrollment",
     Company_Association: "MPB Health",
-    Product_Type: `Direct Enrollment 2024 (${payload.benefitId})`,
+    Product_Type: "DIRECT(42465)",
     Coverage_Option: COVERAGE_MAP[payload.benefitId] || "Unknown",
   };
 
