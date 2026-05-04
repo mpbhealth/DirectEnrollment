@@ -225,7 +225,10 @@ export default function Step2Questionnaire({
 
         <div className="space-y-4">
           <div>
-            <p className="font-semibold text-gray-900 mb-2">Understanding Zion HealthShare Principles of Membership</p>
+            <p className="font-semibold text-gray-900 mb-2">
+              Understanding Zion HealthShare Principles of Membership
+              <span className="text-red-500 ml-1">*</span>
+            </p>
             <p className="text-sm text-gray-700 leading-relaxed mb-4">
               Adherence to the Zion HealthShare Principles of Membership minimizes medical risks, encourages good health practices, and ensures member integrity and accountability. Our members must comply with certain requirements to maintain membership and remain eligible to participate in our medical cost sharing community. Zion HealthShare members are expected to act with honor and integrity. Members should not falsify a sharing request, medical records, or use other deceptive practices. If a member abuses the trust of our community, their membership may be revoked or withdrawn.
             </p>
