@@ -775,26 +775,26 @@ Deno.serve(async (req: Request) => {
 
       try {
         const escaped = escapePromoCodeForILike(trimmed);
-        const ilikePattern = `%${escaped}%`;
         const eff = effectivePdidEnrollment(requestData.pdid);
 
         const { data: promoRows, error: promoError } = await supabase
           .from("promocodes")
           .select("code, discount_amount, product")
-          .ilike("code", ilikePattern)
+          .ilike("code", escaped)
           .eq("active", true)
           .order("id", { ascending: true })
           .limit(40);
 
         type PromoPick = { code: string; discount_amount: string | number; product: string | number };
         const trimmedLower = trimmed.toLowerCase();
-        const eligible = (promoRows as PromoPick[] | null | undefined)?.filter((row) =>
-          promoRowMatchesEnrollmentProduct(row.product, eff),
-        ) ?? [];
+        const eligible =
+          (promoRows as PromoPick[] | null | undefined)?.filter(
+            (row) =>
+              String(row.code ?? "").trim().toLowerCase() === trimmedLower &&
+              promoRowMatchesEnrollmentProduct(row.product, eff),
+          ) ?? [];
 
-        const rowRaw =
-          eligible.find((r) => String(r.code ?? "").trim().toLowerCase() === trimmedLower) ??
-          eligible[0];
+        const rowRaw = eligible[0];
 
         if (!promoError && rowRaw) {
           const discountAmount = parseFloat(String(rowRaw.discount_amount));

@@ -69,8 +69,7 @@ export async function validatePromoCode(
 
   const trimmed = code.trim();
   const escaped = escapePromoCodeForILike(trimmed);
-  /** Substring `ilike`; escaped keeps `_`/`%` in user-entered codes literal vs LIKE wildcards. */
-  const ilikePattern = `%${escaped}%`;
+  /** Whole-string `ilike` (case-insensitive); escaping keeps `%`/`_` literal vs LIKE wildcards. */
   const eff = effectivePdid(pdid ?? null);
   const codeLower = trimmed.toLowerCase();
 
@@ -78,7 +77,7 @@ export async function validatePromoCode(
     const { data: rows, error } = await supabase
       .from('promocodes')
       .select('code, product, discount_amount')
-      .ilike('code', ilikePattern)
+      .ilike('code', escaped)
       .eq('active', true)
       .order('id', { ascending: true })
       .limit(40);
@@ -91,15 +90,15 @@ export async function validatePromoCode(
       };
     }
 
-    /** Rows whose code text matches enrollment (prefer exact trimmed case-insensitive, else first PDID-qualified row among ilike substring hits). */
+    /** Exact trimmed case-insensitive code match, scoped to enrollment product. */
     const eligible =
-      rows?.filter((row) =>
-        promoRowMatchesEnrollmentProduct(row.product, eff),
+      rows?.filter(
+        (row) =>
+          String(row.code ?? '').trim().toLowerCase() === codeLower &&
+          promoRowMatchesEnrollmentProduct(row.product, eff),
       ) ?? [];
 
-    const row =
-      eligible.find((r) => String(r.code ?? '').trim().toLowerCase() === codeLower) ??
-      eligible[0];
+    const row = eligible[0];
 
     if (!row) {
       if ((rows?.length ?? 0) > 0) {
