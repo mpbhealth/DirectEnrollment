@@ -11,6 +11,7 @@ import {
   getPrimarySubscriberPhoneDuplicateError,
   getPrimarySubscriberSsnDuplicateError,
 } from '../utils/dependentPhoneSsnDuplicateValidation';
+import { isPremiumCareUnavailableState } from '../constants/prohibitedEnrollmentStates';
 
 interface ApiResponse {
   success: boolean;
@@ -112,6 +113,8 @@ export default function Step2AddressInfo({
       errorMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [response]);
+
+  const isProhibitedState = isPremiumCareUnavailableState(formData.state);
 
   return (
     <div className="space-y-8">
