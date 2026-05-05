@@ -11,7 +11,7 @@ import {
   getPrimarySubscriberPhoneDuplicateError,
   getPrimarySubscriberSsnDuplicateError,
 } from '../utils/dependentPhoneSsnDuplicateValidation';
-import { isPremiumCareUnavailableState } from '../constants/prohibitedEnrollmentStates';
+import { isPremiumCareUnavailableState, PREMIUM_CARE_UNAVAILABLE_STATE_MESSAGE } from '../constants/prohibitedEnrollmentStates';
 
 interface ApiResponse {
   success: boolean;
@@ -535,7 +535,7 @@ export default function Step2AddressInfo({
                   Processing...
                 </>
               ) : isProhibitedState ? (
-                'Not available in your state'
+                PREMIUM_CARE_UNAVAILABLE_STATE_MESSAGE
               ) : (
                 'Submit Enrollment'
               )}
