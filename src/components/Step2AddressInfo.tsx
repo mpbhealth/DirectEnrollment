@@ -1,4 +1,4 @@
-import { MapPin, ArrowLeft, Loader2, XCircle, ChevronDown, ChevronUp, FileText, Receipt, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { MapPin, ArrowLeft, Loader2, XCircle, ChevronDown, ChevronUp, FileText, Receipt, Eye, EyeOff } from 'lucide-react';
 import { FormData, Dependent, PaymentInfo } from '../hooks/useEnrollmentStorage';
 import { calculateEffectiveDates } from '../utils/dateCalculations';
 import { formatPhoneNumber, formatSSN } from '../utils/formatters';
@@ -34,8 +34,6 @@ interface Step2AddressInfoProps {
   invalidDependentIndices?: number[];
 }
 
-const PROHIBITED_STATES = ['WA', 'DC', 'NJ', 'MA', 'RI'];
-
 export default function Step2AddressInfo({
   formData,
   errors,
@@ -54,10 +52,6 @@ export default function Step2AddressInfo({
   const supportsTextSecurity = typeof CSS !== 'undefined' && CSS.supports?.('-webkit-text-security', 'disc');
   const errorMessageRef = useRef<HTMLDivElement>(null);
   const effectiveDateOptions = calculateEffectiveDates();
-
-  const isProhibitedState = useMemo(() => {
-    return PROHIBITED_STATES.includes(formData.state);
-  }, [formData.state]);
 
   const pricingSummary = useMemo(() => {
     const ONE_TIME_ENROLLMENT_FEE = 100;
@@ -121,17 +115,6 @@ export default function Step2AddressInfo({
 
   return (
     <div className="space-y-8">
-      {isProhibitedState && (
-        <div className="bg-amber-50 border-2 border-amber-500 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-            <p className="text-base font-semibold text-amber-900">
-              This plan is not available in your state
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="space-y-6">
         <div className="flex items-center gap-2 mb-4">
           <MapPin className="w-5 h-5 text-blue-600" />

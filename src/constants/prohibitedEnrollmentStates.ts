@@ -1,0 +1,10 @@
+/** Primary subscriber mailing states where Premium Care enrollment is unavailable. */
+
+export const PREMIUM_CARE_UNAVAILABLE_STATES = ['WA', 'DC', 'NJ', 'MA', 'RI'] as const;
+
+export const PREMIUM_CARE_UNAVAILABLE_STATE_MESSAGE =
+  'Premium Care not available in your state';
+
+export function isPremiumCareUnavailableState(code: string): boolean {
+  return (PREMIUM_CARE_UNAVAILABLE_STATES as readonly string[]).includes(code);
+}
