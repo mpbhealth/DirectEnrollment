@@ -917,7 +917,21 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
             }
 
             enrollmentSuccess = true;
-            extractedMemberId = data.data?.MEMBER?.ID?.toString() || null;
+            /**
+             * 1administration responses wrap the new member under either
+             * `data.MEMBER` or `data.TRANSACTION.MEMBER`; try both, plus the
+             * occasional flat `MEMBERID`/`ID` key, before giving up.
+             */
+            const memberCandidates = [
+              data.data?.MEMBER?.ID,
+              data.data?.TRANSACTION?.MEMBER?.ID,
+              data.data?.TRANSACTION?.MEMBERID,
+              data.data?.MEMBERID,
+              data.data?.ID,
+            ];
+            extractedMemberId = memberCandidates
+              .map(v => (v != null ? String(v).trim() : ''))
+              .find(v => v.length > 0) || null;
             setMemberId(extractedMemberId);
             break;
           }
@@ -1003,11 +1017,13 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
     }
   };
 
-  const sendPdfToGateway = async (memberId: string, pdfUrl: string) => {
+  const sendPdfToGateway = async (memberId: string | null, pdfUrl: string) => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const gatewayApiUrl = `${supabaseUrl}/functions/v1/gateway-member-api-direct`;
+      const agentParam = formData.agent || agentId || '768413';
+      /** Pass `?id=<agent>` so the edge function loads the correct enrollment123 credentials. */
+      const gatewayApiUrl = `${supabaseUrl}/functions/v1/gateway-member-api-direct?id=${agentParam}`;
 
       const gatewayResponse = await fetch(gatewayApiUrl, {
         method: 'POST',
@@ -1019,7 +1035,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
         },
         cache: 'no-store',
         body: JSON.stringify({
-          memberId,
+          memberId: memberId ?? '',
           pdfUrl,
           customerEmail: formData.email,
         }),
@@ -1083,9 +1099,12 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
 
       if (pdfResult.success && pdfResult.pdfUrl) {
         setPdfUrl(pdfResult.pdfUrl);
-        if (enrollmentMemberId) {
-          await sendPdfToGateway(enrollmentMemberId, pdfResult.pdfUrl);
-        }
+        /**
+         * Always forward the PDF to the enrollment123 gateway when the upload
+         * succeeds. The member ID is best-effort: if extraction missed it,
+         * enrollment123 attaches the doc to the agent's most recent enrollment.
+         */
+        await sendPdfToGateway(enrollmentMemberId, pdfResult.pdfUrl);
       } else {
         throw new Error(pdfResult.error || 'PDF upload failed');
       }

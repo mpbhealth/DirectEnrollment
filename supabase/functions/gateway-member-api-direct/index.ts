@@ -139,7 +139,8 @@ Deno.serve(async (req: Request) => {
 
     const requestData: GatewayRequest = await req.json();
 
-    const hasMemberData = !!(requestData.memberId && requestData.pdfUrl);
+    const trimmedMemberId = (requestData.memberId ?? '').toString().trim();
+    const hasPdfUrl = !!(requestData.pdfUrl && requestData.pdfUrl.trim().length > 0);
 
     const formData = new URLSearchParams();
     formData.append("CORP_ID", "1402");
@@ -147,11 +148,15 @@ Deno.serve(async (req: Request) => {
     formData.append("API_PASSWORD", password);
     formData.append("AGENT_ID", agentNumber.toString());
 
-    if (hasMemberData) {
+    if (hasPdfUrl) {
       formData.append("DOC_TYPE", "Signature");
       formData.append("DOC_DESCRIPTION", "Signature");
       formData.append("DOC_PROCESSOR", "Internal");
       formData.append("DOC_FILEURL", requestData.pdfUrl!);
+      /** Only attach when present — enrollment123 falls back to the agent's most recent member otherwise. */
+      if (trimmedMemberId) {
+        formData.append("MEMBER_ID", trimmedMemberId);
+      }
     }
 
     const gatewayApiUrl = "https://enrollment123.com/gateway/member.cfm";
