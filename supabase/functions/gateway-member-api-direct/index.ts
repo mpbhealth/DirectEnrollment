@@ -31,16 +31,6 @@ interface GatewayRequest {
   customerEmail?: string;
 }
 
-function extractStoragePathFromUrl(pdfUrl: string): string | null {
-  try {
-    const url = new URL(pdfUrl);
-    const pathMatch = url.pathname.match(/\/storage\/v1\/object\/public\/enrollment-documents\/(.+)/);
-    return pathMatch ? pathMatch[1] : null;
-  } catch {
-    return null;
-  }
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -183,24 +173,10 @@ Deno.serve(async (req: Request) => {
       responseData = responseText;
     }
 
-    if (response.ok && hasMemberData) {
-      const storagePath = extractStoragePathFromUrl(requestData.pdfUrl!);
-
-      if (storagePath) {
-        await supabase.storage
-          .from('enrollment-documents')
-          .remove([storagePath]);
-
-        if (requestData.customerEmail) {
-          await supabase
-            .from('enrollment_pdfs')
-            .update({
-              metadata: { deleted: true, deleted_at: new Date().toISOString() }
-            })
-            .eq('customer_email', requestData.customerEmail);
-        }
-      }
-    }
+    /**
+     * PDFs are retained in `enrollment-documents` storage as a permanent record
+     * of the enrollment; do not delete after the gateway call succeeds.
+     */
 
     return new Response(
       JSON.stringify({
