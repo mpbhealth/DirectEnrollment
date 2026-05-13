@@ -488,7 +488,7 @@ export default function Step2Questionnaire({
               I understand Maternity sharing requests have a structured Initial Unshareable Amount (IUA) as follows:
             </p>
             <ul className="text-sm text-gray-700 mb-2 space-y-1 list-disc list-inside">
-              <li>Household Membership IUA: $1,000 (Standard Maternity IUA: $2,500)</li>
+              <li>Household Membership IUA: $1,250 (Standard Maternity IUA: $2,500)</li>
               <li>Household Membership IUA: $2,500 (Standard Maternity IUA: $2,500)</li>
               <li>Household Membership IUA: $5,000 (Standard Maternity IUA: $5,000)</li>
             </ul>
