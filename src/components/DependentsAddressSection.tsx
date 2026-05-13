@@ -6,6 +6,7 @@ import {
   getDependentPhoneDuplicateError,
   getDependentSsnDuplicateError,
 } from '../utils/dependentPhoneSsnDuplicateValidation';
+import { isChildDependentUnder18ForContactOptional } from '../utils/dependentAgeValidation';
 import { useState, useEffect } from 'react';
 
 interface DependentsAddressSectionProps {
@@ -99,6 +100,17 @@ export default function DependentsAddressSection({
   }
 
   const selectedDependent = selectedDependentIndex !== null ? dependents[selectedDependentIndex] : null;
+
+  /**
+   * Email / phone / SSN are optional only for Child dependents under 18.
+   * The submit-time validator in EnrollmentWizard.validateStep3 mirrors this rule.
+   */
+  const contactOptional = selectedDependent
+    ? isChildDependentUnder18ForContactOptional(
+        selectedDependent.dob,
+        selectedDependent.relationship,
+      )
+    : false;
 
   const handleFieldChange = (field: keyof Dependent, value: string) => {
     if (selectedDependentIndex === null) return;
@@ -505,7 +517,7 @@ export default function DependentsAddressSection({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address <span className="text-red-500">*</span>
+                    Email Address {!contactOptional && <span className="text-red-500">*</span>}
                   </label>
                   <input
                     type="email"
@@ -517,7 +529,7 @@ export default function DependentsAddressSection({
                       errors[`dependent_${selectedDependentIndex}_email`] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder=""
-                    aria-required="true"
+                    aria-required={!contactOptional}
                     aria-invalid={!!errors[`dependent_${selectedDependentIndex}_email`]}
                   />
                   {errors[`dependent_${selectedDependentIndex}_email`] && (
@@ -530,7 +542,7 @@ export default function DependentsAddressSection({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number <span className="text-red-500">*</span>
+                      Phone Number {!contactOptional && <span className="text-red-500">*</span>}
                     </label>
                     <input
                       type="tel"
@@ -542,7 +554,7 @@ export default function DependentsAddressSection({
                       }`}
                       placeholder="555-123-4567"
                       maxLength={12}
-                      aria-required="true"
+                      aria-required={!contactOptional}
                       aria-invalid={!!errors[`dependent_${selectedDependentIndex}_phone`]}
                     />
                     {errors[`dependent_${selectedDependentIndex}_phone`] && (
@@ -554,7 +566,7 @@ export default function DependentsAddressSection({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Social Security <span className="text-red-500">*</span>
+                      Social Security {!contactOptional && <span className="text-red-500">*</span>}
                     </label>
                     <div className="relative">
                       <input
@@ -569,7 +581,7 @@ export default function DependentsAddressSection({
                         }`}
                         placeholder="XXX-XX-XXXX"
                         maxLength={11}
-                        aria-required="true"
+                        aria-required={!contactOptional}
                         aria-invalid={!!errors[`dependent_${selectedDependentIndex}_ssn`]}
                       />
                       <button

@@ -15,6 +15,7 @@ import {
   getPrimarySubscriberPhoneDuplicateError,
   getPrimarySubscriberSsnDuplicateError,
 } from '../utils/dependentPhoneSsnDuplicateValidation';
+import { isChildDependentUnder18ForContactOptional } from '../utils/dependentAgeValidation';
 import { encryptSensitiveFields } from '../utils/payloadEncryption';
 import {
   isPremiumCareUnavailableState,
@@ -318,6 +319,16 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
       const prefix = `dependent_${index}_`;
       let hasError = false;
 
+      /**
+       * Children under 18 may enroll without email/phone/SSN. When this is true
+       * we skip the "required" + duplicate checks for empty values, but keep
+       * format + duplicate checks if the parent fills any of them in.
+       */
+      const skipContactRequired = isChildDependentUnder18ForContactOptional(
+        dependent.dob,
+        dependent.relationship,
+      );
+
       // Only validate address fields if NOT using same address as subscriber
       if (!dependent.useSameAddress) {
         if (!dependent.address?.trim()) {
@@ -341,15 +352,18 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
         }
       }
 
-      if (!dependent.email?.trim()) {
-        newErrors[`${prefix}email`] = 'Email address is required';
-        hasError = true;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dependent.email)) {
+      const emailValue = dependent.email?.trim() ?? '';
+      if (!emailValue) {
+        if (!skipContactRequired) {
+          newErrors[`${prefix}email`] = 'Email address is required';
+          hasError = true;
+        }
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
         newErrors[`${prefix}email`] = 'Email address must be valid';
         hasError = true;
       } else {
         const duplicateMsg = getDependentEmailDuplicateError(
-          dependent.email,
+          emailValue,
           index,
           formData.dependents,
           formData.email ?? ''
@@ -359,17 +373,21 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
           hasError = true;
         }
       }
-      if (!dependent.phone?.trim()) {
-        newErrors[`${prefix}phone`] = 'Phone number is required';
-        hasError = true;
+
+      const phoneValue = dependent.phone?.trim() ?? '';
+      if (!phoneValue) {
+        if (!skipContactRequired) {
+          newErrors[`${prefix}phone`] = 'Phone number is required';
+          hasError = true;
+        }
       } else {
-        const phoneDigits = dependent.phone.replace(/\D/g, '');
+        const phoneDigits = phoneValue.replace(/\D/g, '');
         if (phoneDigits.length !== 10) {
           newErrors[`${prefix}phone`] = 'Phone must be exactly 10 digits';
           hasError = true;
         } else {
           const dupPhoneMsg = getDependentPhoneDuplicateError(
-            dependent.phone,
+            phoneValue,
             index,
             formData.dependents,
             formData.phone ?? ''
@@ -380,17 +398,21 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
           }
         }
       }
-      if (!dependent.ssn?.trim()) {
-        newErrors[`${prefix}ssn`] = 'Social Security is required';
-        hasError = true;
+
+      const ssnValue = dependent.ssn?.trim() ?? '';
+      if (!ssnValue) {
+        if (!skipContactRequired) {
+          newErrors[`${prefix}ssn`] = 'Social Security is required';
+          hasError = true;
+        }
       } else {
-        const ssnDigits = dependent.ssn.replace(/\D/g, '');
+        const ssnDigits = ssnValue.replace(/\D/g, '');
         if (ssnDigits.length !== 9) {
           newErrors[`${prefix}ssn`] = 'Social Security must be exactly 9 digits';
           hasError = true;
         } else {
           const dupSsnMsg = getDependentSsnDuplicateError(
-            dependent.ssn,
+            ssnValue,
             index,
             formData.dependents,
             formData.ssn ?? ''
@@ -401,6 +423,7 @@ export default function EnrollmentWizard({ benefitId, onBenefitIdChange, agentId
           }
         }
       }
+
       if (!dependent.gender?.trim()) {
         newErrors[`${prefix}gender`] = 'Gender is required';
         hasError = true;
